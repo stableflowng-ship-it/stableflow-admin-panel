@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import useAdmin from "@/Hooks/useAdmin"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -71,6 +72,7 @@ const mockTransactions = [
 ]
 
 export function AdminDashboard() {
+  const {res} = useAdmin()
   const [activeTab, setActiveTab] = useState("overview")
 
   const getStatusBadge = (status: string) => {
