@@ -184,7 +184,7 @@ export function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {mockBusinesses.filter((b) => b.status === "approved").length}
+                      {res?.data?.filter((b) => b.is_active === true).length}
                     </div>
                     <p className="text-xs text-muted-foreground">1 pending approval</p>
                   </CardContent>
@@ -281,7 +281,7 @@ export function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockBusinesses.map((business) => (
+                    {res?.data?.map((business) => (
                       <div
                         key={business.id}
                         className="flex items-center justify-between p-4 border border-border rounded-lg"
@@ -292,18 +292,18 @@ export function AdminDashboard() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{business.name}</p>
-                            <p className="text-sm text-muted-foreground">Owner: {business.owner}</p>
+                            <p className="text-sm text-muted-foreground">Owner: {business.owner_id}</p>
                             <p className="text-xs text-muted-foreground">
-                              Type: {business.type} • Applied: {business.appliedDate}
+                              Type: {business.category_name} • Applied: {new Date(business.created_on).toISOString().split('T')[0]}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge className={getStatusBadge(business.status)}>
-                            {getStatusIcon(business.status)}
-                            <span className="ml-1">{business.status}</span>
+                          <Badge className={getStatusBadge(business.onboarding_step)}>
+                            {getStatusIcon(business.onboarding_step)}
+                            <span className="ml-1">{business.onboarding_step}</span>
                           </Badge>
-                          {business.status === "pending" && (
+                          {business.onboarding_step === "pending" && (
                             <Button size="sm" className="bg-primary hover:bg-primary/90">
                               Approve
                             </Button>
