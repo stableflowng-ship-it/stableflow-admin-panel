@@ -1,5 +1,5 @@
 import { ApiResponse, Business } from "@/types/response";
-import { GetResquest, PatchRequest } from "@/utils/apiHelper";
+import { GetRequest, PatchRequest } from "@/utils/apiHelper";
 import { useEffect, useState } from "react";
 
 const useAdmin = () => {
@@ -7,7 +7,7 @@ const useAdmin = () => {
     const id = 6;
 
     const getAllBusiness = async () => {
-        const response = await GetResquest("/admin/get-businesses");
+        const response = await GetRequest("admin/get-businesses?page=1&limit=100&state=ALL");
         console.log(response);
 
         if (response && "data" in response) {
