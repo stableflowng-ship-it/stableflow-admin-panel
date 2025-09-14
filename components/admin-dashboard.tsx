@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { format } from 'date-and-time';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -15,6 +16,9 @@ import {
   Clock,
   MoreHorizontal,
 } from "lucide-react"
+import { useBusinesStore } from "@/stores/business"
+import { useUsersStore } from "@/stores/users"
+import { useTransStore } from "@/stores/transactions"
 
 // Mock data for demonstration
 const mockUsers = [
@@ -71,7 +75,11 @@ const mockTransactions = [
 ]
 
 export function AdminDashboard() {
+  // const {res} = useAdmin()
   const [activeTab, setActiveTab] = useState("overview")
+  const { getData,businessData, approve, busiLoading } = useBusinesStore()
+  const { getUserData, userData } = useUsersStore()
+  const {getTransData, transData} = useTransStore()
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -100,8 +108,14 @@ export function AdminDashboard() {
     }
   }
 
+  useEffect(() => {
+    getData()
+    getTransData()
+    getUserData()
+  }, [])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="flex h-16 items-center px-6">
@@ -114,7 +128,7 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex grow overflow-y-scroll">
         {/* Sidebar */}
         <aside className="w-64 bg-sidebar border-r border-sidebar-border">
           <nav className="p-4 space-y-2">
@@ -170,8 +184,8 @@ export function AdminDashboard() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{mockUsers.length}</div>
-                    <p className="text-xs text-muted-foreground">+2 from last month</p>
+                    <div className="text-2xl font-bold">{userData.length}</div>
+                    {/* <p className="text-xs text-muted-foreground">+2 from last month</p> */}
                   </CardContent>
                 </Card>
 
@@ -182,9 +196,9 @@ export function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {mockBusinesses.filter((b) => b.status === "approved").length}
+                      {businessData.filter((b) => b.is_active === true).length}
                     </div>
-                    <p className="text-xs text-muted-foreground">1 pending approval</p>
+                    <p className="text-xs text-muted-foreground">{businessData.filter((b) => b.is_active === false).length} pending approval</p>
                   </CardContent>
                 </Card>
 
@@ -194,7 +208,7 @@ export function AdminDashboard() {
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{mockTransactions.length}</div>
+                    <div className="text-2xl font-bold">{transData.length}</div>
                     <p className="text-xs text-muted-foreground">+1 from yesterday</p>
                   </CardContent>
                 </Card>
@@ -206,7 +220,7 @@ export function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${mockTransactions.reduce((sum, tx) => sum + tx.amount, 0).toLocaleString()}
+                      ${transData.reduce((sum, tx) => sum + tx.token_amount, 0).toLocaleString()}
                     </div>
                     <p className="text-xs text-muted-foreground">USDC + USDT combined</p>
                   </CardContent>
@@ -231,7 +245,7 @@ export function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockUsers.map((user) => (
+                    {userData.map((user) => (
                       <div
                         key={user.id}
                         className="flex items-center justify-between p-4 border border-border rounded-lg"
@@ -243,7 +257,7 @@ export function AdminDashboard() {
                           <div>
                             <p className="font-medium text-foreground">{user.name}</p>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <p className="text-xs text-muted-foreground">Joined: {user.joinDate}</p>
+                            <p className="text-xs text-muted-foreground">Joined: {format(new Date(user.created_at) , 'YYYY-MM-DD')}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -279,7 +293,7 @@ export function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockBusinesses.map((business) => (
+                    {!busiLoading && businessData.map((business) => (
                       <div
                         key={business.id}
                         className="flex items-center justify-between p-4 border border-border rounded-lg"
@@ -290,19 +304,19 @@ export function AdminDashboard() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{business.name}</p>
-                            <p className="text-sm text-muted-foreground">Owner: {business.owner}</p>
+                            <p className="text-sm text-muted-foreground">Owner: {business.owner_id}</p>
                             <p className="text-xs text-muted-foreground">
-                              Type: {business.type} • Applied: {business.appliedDate}
+                              Type: {business.category_name} • Applied: {new Date(business.created_on).toISOString().split('T')[0]}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge className={getStatusBadge(business.status)}>
-                            {getStatusIcon(business.status)}
-                            <span className="ml-1">{business.status}</span>
+                          <Badge className={getStatusBadge(business.onboarding_step)}>
+                            {getStatusIcon(business.onboarding_step)}
+                            <span className="ml-1">{business.onboarding_step}</span>
                           </Badge>
-                          {business.status === "pending" && (
-                            <Button size="sm" className="bg-primary hover:bg-primary/90">
+                          {business.onboarding_step === "NOT_STARTED" && (
+                            <Button onClick={()=> approve(business.id)} size="sm" className="bg-primary hover:bg-primary/90">
                               Approve
                             </Button>
                           )}
@@ -334,7 +348,7 @@ export function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockTransactions.map((transaction) => (
+                    {transData.map((transaction) => (
                       <div
                         key={transaction.id}
                         className="flex items-center justify-between p-4 border border-border rounded-lg"
@@ -344,15 +358,15 @@ export function AdminDashboard() {
                             <CreditCard className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium text-foreground">{transaction.id}</p>
-                            <p className="text-sm text-muted-foreground">Business: {transaction.business}</p>
-                            <p className="text-xs text-muted-foreground">Date: {transaction.date}</p>
+                            <p className="font-medium text-foreground">{transaction.reference}</p>
+                            <p className="text-sm text-muted-foreground">Business: {transaction.business.name}</p>
+                            <p className="text-xs text-muted-foreground">Date: {format(new Date(transaction.receivedAt) , 'YYYY-MM-DD')}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="text-right">
                             <p className="font-medium text-foreground">
-                              ${transaction.amount.toLocaleString()} {transaction.currency}
+                              ${transaction.token_amount.toLocaleString()} {transaction.token}
                             </p>
                           </div>
                           <Badge className={getStatusBadge(transaction.status)}>
